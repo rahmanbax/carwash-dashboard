@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+@theme {
+    --color-cranberry-50: #fdecec;
+    --color-cranberry-100: #f8b4b2;
+    --color-cranberry-200: #f58f8c;
+    --color-cranberry-300: #f37c79;
+    --color-cranberry-400: #f16965;
+    --color-cranberry-500: #EE443F;
+    --color-cranberry-600: #d63d39;
+    --color-cranberry-700: #8f2926;
+    --color-cranberry-800: #5f1b19;
+    --color-cranberry-900: #300e0d;
+}

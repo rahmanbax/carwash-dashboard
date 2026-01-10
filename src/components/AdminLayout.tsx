@@ -1,0 +1,120 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import AdminSidebar from "@/components/AdminSidebar";
+import { getDate } from "@/utils/getDate";
+import { IconUser, IconLogout, IconChevronDown } from "@tabler/icons-react";
+
+interface AdminLayoutProps {
+  children: React.ReactNode;
+}
+
+const AdminLayout = ({ children }: AdminLayoutProps) => {
+  const router = useRouter();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    // TODO: Implement actual logout logic
+    router.push("/login");
+  };
+
+  return (
+    <div className="flex h-screen bg-gray-100">
+      {/* Admin Sidebar */}
+      <AdminSidebar />
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header/Navbar */}
+        <header className="bg-white border-b border-gray-200 p-5 flex items-center justify-between">
+          <h1 className="text-base font-semibold">
+            {getDate(new Date().toISOString())}
+          </h1>
+
+          {/* Profile Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-2 rounded-lg cursor-pointer"
+            >
+              {/* Profile Photo */}
+              <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+                <Image
+                  src="/profile-placeholder.png"
+                  alt="Profile"
+                  width={40}
+                  height={40}
+                  className="object-cover w-full h-full"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              </div>
+
+              {/* Name & Role */}
+              <div className="text-left hidden sm:block">
+                <p className="text-sm font-semibold text-gray-900">
+                  Admin User
+                </p>
+                <p className="text-xs text-gray-500">Admin</p>
+              </div>
+
+              <IconChevronDown
+                size={16}
+                className={`text-gray-500 transition-transform ${
+                  isDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {/* Dropdown Menu */}
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
+                <Link
+                  href="/admin/profile"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
+                  <IconUser size={16} />
+                  Profil
+                </Link>
+                <hr className="my-1 border-gray-100" />
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full cursor-pointer"
+                >
+                  <IconLogout size={16} />
+                  Keluar
+                </button>
+              </div>
+            )}
+          </div>
+        </header>
+
+        {/* Content Area with scrolling */}
+        <main className="flex-1 overflow-y-auto p-5">{children}</main>
+      </div>
+    </div>
+  );
+};
+
+export default AdminLayout;

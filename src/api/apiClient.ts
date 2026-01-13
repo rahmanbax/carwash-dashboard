@@ -29,7 +29,11 @@ apiClient.interceptors.request.use(
         // Ambil token dari localStorage
         const token = localStorage.getItem('token');
 
-        if (token) {
+        // Jangan kirim token HANYA untuk endpoint login
+        // Endpoint refresh PERLU token (expired) jika backend pakai grace period
+        const isLoginEndpoint = config.url?.includes('/auth/login');
+
+        if (token && !isLoginEndpoint) {
             config.headers.Authorization = `Bearer ${token}`;
         }
 
@@ -48,8 +52,8 @@ apiClient.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        // Jika error 401 dan bukan dari endpoint refresh/login
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // Jika error 401 atau 403 dan bukan dari endpoint refresh/login
+        if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
             // Jika dari endpoint login, jangan redirect - biarkan login page handle error
             if (originalRequest.url?.includes('/auth/login')) {
                 return Promise.reject(error);
@@ -70,7 +74,7 @@ apiClient.interceptors.response.use(
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
                 }).then(token => {
-                    originalRequest.headers.Authorization = `Bearer ${token}`;
+                    originalRequest.headers['Authorization'] = `Bearer ${token}`;
                     return apiClient(originalRequest);
                 }).catch(err => {
                     return Promise.reject(err);
@@ -83,24 +87,34 @@ apiClient.interceptors.response.use(
             try {
                 // Panggil endpoint refresh token
                 const response = await apiClient.post('/auth/refresh');
+                // console.log('Refresh Token Response:', response.data);
+
                 const { token, user } = response.data.data;
+                // console.log('New Token:', token);
 
                 // Simpan token baru
                 localStorage.setItem('token', token);
                 localStorage.setItem('user', JSON.stringify(user));
+
+                // Verifikasi storage
+                // console.log('Stored Token:', localStorage.getItem('token'));
+
                 document.cookie = `token=${token}; path=/; max-age=${60 * 60 * 24 * 30}`;
                 document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=${60 * 60 * 24 * 30}`;
 
-                // Update header dengan token baru
+                // Update default header
                 apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                originalRequest.headers.Authorization = `Bearer ${token}`;
+
+                // Update original request header
+                originalRequest.headers['Authorization'] = `Bearer ${token}`;
 
                 // Process queued requests
                 processQueue(null, token);
 
                 // Retry original request
                 return apiClient(originalRequest);
-            } catch (refreshError) {
+            } catch (refreshError: any) {
+                console.error('Refresh Token Failed:', refreshError.response?.data || refreshError.message);
                 processQueue(refreshError, null);
 
                 // Redirect ke login jika refresh gagal

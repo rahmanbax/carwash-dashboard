@@ -8,6 +8,8 @@ import Sidebar from "@/components/Sidebar";
 import { getDate } from "@/utils/getDate";
 import { IconUser, IconLogout, IconChevronDown } from "@tabler/icons-react";
 import { useLogout } from "@/hooks/useLogout";
+import { authService } from "@/services/authService";
+import { User } from "@/types/auth";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -18,6 +20,15 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { logout, isLoggingOut } = useLogout();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    // Ambil data user dari localStorage saat component mount
+    const storedUser = authService.getUser();
+    if (storedUser) {
+      setUser(storedUser);
+    }
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -74,9 +85,11 @@ const MainLayout = ({ children }: MainLayoutProps) => {
               {/* Name & Role */}
               <div className="text-left hidden sm:block">
                 <p className="text-sm font-semibold text-gray-900">
-                  Admin User
+                  {user ? user.name : 'Admin User'}
                 </p>
-                <p className="text-xs text-gray-500">Superadmin</p>
+                <p className="text-xs text-gray-500">
+                  {user ? user.role : 'Superadmin'}
+                </p>
               </div>
 
               <IconChevronDown

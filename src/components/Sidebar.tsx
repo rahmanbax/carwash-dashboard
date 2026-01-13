@@ -32,10 +32,10 @@ const Sidebar = () => {
 
   return (
     <aside className="w-64 flex flex-col py-2 px-5 bg-white border-r border-gray-200">
-      <div className="flex items-center p-2 mb-4">
+      <a href="/" className="flex items-center p-2 mb-4 w-fit">
         <Image src="/tel-u-logo.png" alt="TelU Logo" width={20} height={20} />
         <span className="ml-2 font-semibold text-xl">Carwash</span>
-      </div>
+      </a>
       <nav className="flex-1">
         <ul>
           {navItems.map((item) => {
@@ -47,8 +47,8 @@ const Sidebar = () => {
                 <Link
                   href={item.href}
                   className={`flex items-center p-3 rounded-lg transition-colors duration-200 font-medium ${isActive
-                      ? "bg-cranberry-50 text-cranberry-500 border border-cranberry-500"
-                      : "hover:bg-cranberry-50 hover:text-cranberry-500 text-gray-500"
+                    ? "bg-cranberry-50 text-cranberry-500 border border-cranberry-500"
+                    : "hover:bg-cranberry-50 hover:text-cranberry-500 text-gray-500"
                     }`}
                 >
                   <Icon className="mr-2" size={20} />

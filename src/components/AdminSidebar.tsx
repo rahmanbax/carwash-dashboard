@@ -44,10 +44,10 @@ const AdminSidebar = () => {
 
   return (
     <aside className="w-64 flex flex-col py-2 px-5 bg-white border-r border-gray-200">
-      <div className="flex items-center p-2 mb-4">
+      <a href="/" className="flex items-center p-2 mb-4 w-fit">
         <Image src="/tel-u-logo.png" alt="TelU Logo" width={20} height={20} />
         <span className="ml-2 font-semibold text-xl">Carwash</span>
-      </div>
+      </a>
       <nav className="flex-1">
         <ul>
           {navItems.map((item) => {

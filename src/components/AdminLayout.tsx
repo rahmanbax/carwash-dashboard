@@ -8,6 +8,8 @@ import AdminSidebar from "@/components/AdminSidebar";
 import { getDate } from "@/utils/getDate";
 import { IconUser, IconLogout, IconChevronDown } from "@tabler/icons-react";
 import { useLogout } from "@/hooks/useLogout";
+import { authService } from "@/services/authService";
+import { User } from "@/types/auth";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -18,6 +20,15 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { logout, isLoggingOut } = useLogout();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    // Ambil data user dari localStorage saat component mount
+    const storedUser = authService.getUser();
+    if (storedUser) {
+      setUser(storedUser);
+    }
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -74,9 +85,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               {/* Name & Role */}
               <div className="text-left hidden sm:block">
                 <p className="text-sm font-semibold text-gray-900">
-                  Admin User
+                  {user ? user.name : 'Admin User'}
                 </p>
-                <p className="text-xs text-gray-500">Admin</p>
+                <p className="text-xs text-gray-500">
+                  {user ? user.role : 'Admin'}
+                </p>
               </div>
 
               <IconChevronDown
@@ -88,7 +101,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
             {/* Dropdown Menu */}
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                 <Link
                   href="/admin/profile"
                   className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"

@@ -4,17 +4,42 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
+import ButtonComponent from "@/components/buttons/ButtonComponent";
+import TextInput from "@/components/inputs/TextInput";
+import PasswordInput from "@/components/inputs/PasswordInput";
+import { authService } from "@/services/authService";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement actual login logic
-    router.push("/superadmin/dashboard");
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const response = await authService.login({ username, password });
+
+      // Redirect berdasarkan role user
+      const userRole = response.data.user.role;
+      if (userRole === 'SUPERADMIN') {
+        router.push("/superadmin/dashboard");
+      } else if (userRole === 'ADMIN') {
+        router.push("/admin/dashboard");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (err: any) {
+      // Handle error dari API
+      const errorMessage = err.response?.data?.message || "Login gagal. Silakan coba lagi.";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -41,64 +66,31 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600 text-sm text-center">{error}</p>
+          </div>
+        )}
+
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Username Field */}
-          <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-semibold text-gray-900 mb-2"
-            >
-              Username
-            </label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Masukkan Username"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cranberry-300 focus:border-transparent transition-all placeholder:text-gray-400"
-            />
-          </div>
+          <TextInput id="username" label="Username" onChange={(e) => setUsername(e.target.value)} isRed={true} required={true} />
 
           {/* Password Field */}
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-semibold text-gray-900 mb-2"
-            >
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Masukkan Password"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-transparent transition-all placeholder:text-gray-400 pr-12"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-              >
-                {showPassword ? (
-                  <IconEye size={20} />
-                ) : (
-                  <IconEyeOff size={20} />
-                )}
-              </button>
-            </div>
-          </div>
+          <PasswordInput id="password" onChange={(e) => setPassword(e.target.value)} isRed={true} required={true} />
 
           {/* Submit Button */}
-          <button
+          <ButtonComponent
             type="submit"
-            className="w-full bg-cranberry-500 hover:bg-cranberry-600 text-white font-semibold py-2 px-3 rounded-lg transition-colors duration-200 cursor-pointer"
-          >
-            Masuk
-          </button>
+            label={isLoading ? "Memproses..." : "Masuk"}
+            isPrimary={true}
+            isRed={true}
+            isIconEnable={false}
+            isFullWidth={true}
+            disabled={isLoading}
+          />
         </form>
       </div>
     </div>

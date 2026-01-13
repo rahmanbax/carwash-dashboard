@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/AdminSidebar";
 import { getDate } from "@/utils/getDate";
 import { IconUser, IconLogout, IconChevronDown } from "@tabler/icons-react";
+import { useLogout } from "@/hooks/useLogout";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { logout, isLoggingOut } = useLogout();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -32,9 +34,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    // TODO: Implement actual logout logic
-    router.push("/login");
+  const handleLogout = async () => {
+    await logout();
   };
 
   return (
@@ -80,9 +81,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
               <IconChevronDown
                 size={16}
-                className={`text-gray-500 transition-transform ${
-                  isDropdownOpen ? "rotate-180" : ""
-                }`}
+                className={`text-gray-500 transition-transform ${isDropdownOpen ? "rotate-180" : ""
+                  }`}
               />
             </button>
 
@@ -100,10 +100,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 <hr className="my-1 border-gray-100" />
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full cursor-pointer"
+                  disabled={isLoggingOut}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <IconLogout size={16} />
-                  Keluar
+                  {isLoggingOut ? 'Keluar...' : 'Keluar'}
                 </button>
               </div>
             )}

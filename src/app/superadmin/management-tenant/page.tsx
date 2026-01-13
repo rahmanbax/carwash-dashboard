@@ -37,10 +37,10 @@ const ManagementTenantPage = () => {
 
   const handleSubmit = (data: TenantFormData) => {
     if (modalMode === "add") {
-      console.log("New tenant:", data);
+      // console.log("New tenant:", data);
       // TODO: Implement API call to add tenant
     } else {
-      console.log("Updated tenant:", data);
+      // console.log("Updated tenant:", data);
       // TODO: Implement API call to update tenant
     }
   };

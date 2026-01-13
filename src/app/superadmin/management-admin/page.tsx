@@ -46,10 +46,10 @@ const ManagementAdminPage = () => {
 
   const handleSubmit = (data: AdminFormData) => {
     if (modalMode === "add") {
-      console.log("New admin:", data);
+      // console.log("New admin:", data);
       // TODO: Implement API call to add admin
     } else {
-      console.log("Updated admin:", data);
+      // console.log("Updated admin:", data);
       // TODO: Implement API call to update admin
     }
   };

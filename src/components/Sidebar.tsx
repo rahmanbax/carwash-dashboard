@@ -46,11 +46,10 @@ const Sidebar = () => {
               <li key={item.href} className="mb-2">
                 <Link
                   href={item.href}
-                  className={`flex items-center p-3 rounded-lg transition-colors duration-200 font-medium ${
-                    isActive
+                  className={`flex items-center p-3 rounded-lg transition-colors duration-200 font-medium ${isActive
                       ? "bg-cranberry-50 text-cranberry-500 border border-cranberry-500"
                       : "hover:bg-cranberry-50 hover:text-cranberry-500 text-gray-500"
-                  }`}
+                    }`}
                 >
                   <Icon className="mr-2" size={20} />
                   {item.label}

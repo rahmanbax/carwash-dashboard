@@ -1,76 +1,47 @@
+"use client";
+
 import StatsCard from "@/components/StatsCard";
 import LineAreaChart from "@/components/charts/LineAreaChart";
 import BarChart from "@/components/charts/BarChart";
 import { IconUser } from "@tabler/icons-react";
 import VehicleStatusCard from "@/components/vehicle/VehicleStatusCard";
+import { useSuperadminStats } from "@/hooks/useSuperadminStats";
 
-// Sample data untuk status vehicle
-const mockVehicleData = [
-  {
-    plat: "D 1234 ABC",
-    kategori: "mobil",
-    jamBooking: "09:00",
-    status: "SIAP_DIAMBIL",
-  },
-  {
-    plat: "D 5678 XYZ",
-    kategori: "motor",
-    jamBooking: "09:30",
-    status: "DIAMBIL",
-  },
-  {
-    plat: "B 9012 DEF",
-    kategori: "mobil",
-    jamBooking: "10:00",
-    status: "DICUCI",
-  },
-  {
-    plat: "D 3456 GHI",
-    kategori: "motor",
-    jamBooking: "10:30",
-    status: "DICUCI",
-  },
-];
 
-// Sample data untuk chart
-const transactionData = [
-  { name: "Senin", value: 450000 },
-  { name: "Selasa", value: 100000 },
-  { name: "Rabu", value: 380000 },
-  { name: "Kamis", value: 320000 },
-  { name: "Jumat", value: 500000 },
-];
-
-const pencucianData = [
-  { name: "08:00", value: 3 },
-  { name: "09:00", value: 2 },
-  { name: "10:00", value: 1 },
-  { name: "11:00", value: 2 },
-  { name: "12:00", value: 4 },
-];
 
 const SuperadminDashboardPage = () => {
+  const { data: stats, isLoading } = useSuperadminStats();
+
+  if (isLoading) return <div>Loading...</div>;
+  if (!stats) return <div>No data available</div>;
+
+  // Transform weekly revenue for LineChart
+  const transactionData = stats.weeklyRevenue.data.map((item: any) => ({
+    name: item.day,
+    value: item.revenue
+  }));
+
+  // Transform washing stats for BarChart
+  const pencucianData = stats.todayWashingStatistics.map((item: any) => ({
+    name: item.time,
+    value: item.value
+  }));
+
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <StatsCard
           label="Total Tenant"
-          amount={10}
+          amount={stats.totalTenant}
           change={0}
-          isChange={true}
+          isChange={false}
           icon={<IconUser />}
         />
         <StatsCard
-          label="Total Tenant"
-          amount={10}
+          label="Total Admin"
+          amount={stats.totalAdmin}
           change={0}
-          isChange={true}
-          icon={<IconUser />}
-        />
-        <StatsCard
-          label="Total Tenant"
-          amount={10}
           isChange={false}
           icon={<IconUser />}
         />
@@ -79,7 +50,7 @@ const SuperadminDashboardPage = () => {
       {/* Line Area Chart */}
       <LineAreaChart
         data={transactionData}
-        title="Pendapatan Minggu Ini"
+        title={`Pendapatan Minggu Ini (${stats.weeklyRevenue.range.start} - ${stats.weeklyRevenue.range.end})`}
         height={350}
       />
 
@@ -93,8 +64,16 @@ const SuperadminDashboardPage = () => {
         <div className="w-full bg-white p-5 rounded-lg shadow-sm">
           <h3 className="text-lg font-semibold">Antrian Kendaraan</h3>
           <div className="space-y-2 mt-6">
-            {mockVehicleData.map((item) => (
-              <VehicleStatusCard key={item.plat} data={item} />
+            {stats.todayQueue.map((item: any) => (
+              <VehicleStatusCard
+                key={item.bookingNumber}
+                data={{
+                  plat: item.plate,
+                  kategori: item.type,
+                  jamBooking: item.queue_time,
+                  status: item.status
+                }}
+              />
             ))}
           </div>
         </div>

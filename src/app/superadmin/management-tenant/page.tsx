@@ -10,15 +10,21 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 
-// Sample tenant data
-const sampleTenant: TenantFormData = {
-  name: "Tel-U Carwash Bandung",
-  address: "Jl. Telekomunikasi No. 1, Bandung",
-  phone: "08123456789",
-  email: "carwashbandung@gmail.com",
-};
+import { useSuperadminLocations, useUpdateLocation, useCreateLocation, useDeleteLocation } from "@/hooks/useLocations";
+import { Location } from "@/types/location";
+import ManagementSkeleton from "@/components/skeleton/ManagementSkeleton";
+import ButtonComponent from "@/components/buttons/ButtonComponent";
+import Toast from "@/components/Toast";
+import ErrorView from "@/components/ErrorView";
+import { useToast } from "@/hooks/useToast";
 
 const ManagementTenantPage = () => {
+  const { data, isLoading, isError, refetch } = useSuperadminLocations();
+  const updateLocationMutation = useUpdateLocation();
+  const createLocationMutation = useCreateLocation();
+  const deleteLocationMutation = useDeleteLocation();
+  const { toasts, showToast, removeToast } = useToast();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [editData, setEditData] = useState<TenantFormData | undefined>();
@@ -29,90 +35,192 @@ const ManagementTenantPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (tenant: TenantFormData) => {
+  const handleOpenEditModal = (tenant: Location) => {
     setModalMode("edit");
-    setEditData(tenant);
+    // Mapping Location to TenantFormData
+    setEditData({
+      id: tenant.id,
+      name: tenant.name,
+      address: tenant.address,
+      phone: tenant.phone,
+      email: "", // email is not in Location response, setting empty
+      isActive: tenant.isActive,
+      latitude: tenant.latitude,
+      longitude: tenant.longitude,
+      photoUrl: tenant.photoUrl,
+    });
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (data: TenantFormData) => {
+  const handleSubmit = async (formData: TenantFormData) => {
     if (modalMode === "add") {
-      // console.log("New tenant:", data);
-      // TODO: Implement API call to add tenant
+      try {
+        const data = new FormData();
+        data.append("name", formData.name);
+        data.append("address", formData.address);
+        data.append("phone", formData.phone);
+        data.append("isActive", formData.isActive.toString());
+        data.append("latitude", formData.latitude);
+        data.append("longitude", formData.longitude);
+
+        if (formData.photoFile) {
+          data.append("photo", formData.photoFile);
+        }
+
+        await createLocationMutation.mutateAsync(data);
+        showToast("Berhasil menambahkan tenant baru", "success");
+        setIsModalOpen(false);
+      } catch (error: any) {
+        const message = error.response?.data?.message || "Gagal menambahkan tenant";
+        showToast(message, "error");
+        console.error("Failed to create tenant:", error);
+      }
     } else {
-      // console.log("Updated tenant:", data);
-      // TODO: Implement API call to update tenant
+      if (formData.id) {
+        try {
+          const data = new FormData();
+          data.append("name", formData.name);
+          data.append("address", formData.address);
+          data.append("phone", formData.phone);
+          data.append("isActive", formData.isActive.toString());
+          data.append("latitude", formData.latitude);
+          data.append("longitude", formData.longitude);
+
+          if (formData.photoFile) {
+            data.append("photo", formData.photoFile);
+          }
+
+          await updateLocationMutation.mutateAsync({
+            id: formData.id,
+            data: data,
+          });
+          showToast("Berhasil memperbarui data tenant", "success");
+          setIsModalOpen(false);
+        } catch (error: any) {
+          const message = error.response?.data?.message || "Gagal memperbarui data tenant";
+          showToast(message, "error");
+          console.error("Failed to update tenant:", error);
+        }
+      }
     }
   };
+
+  const handleDelete = async (id: number) => {
+    if (confirm("Apakah Anda yakin ingin menghapus tenant ini?")) {
+      try {
+        await deleteLocationMutation.mutateAsync(id);
+        showToast("Tenant berhasil dihapus", "success");
+      } catch (error: any) {
+        const message = error.response?.data?.message || "Gagal menghapus tenant";
+        showToast(message, "error");
+        console.error("Failed to delete tenant:", error);
+      }
+    }
+  };
+
+  if (isLoading) {
+    return <ManagementSkeleton />;
+  }
+
+  if (isError) {
+    return <ErrorView onRetry={() => refetch()} />;
+  }
+
+  const locations = data?.locations || [];
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="font-semibold text-lg">Manajemen Tenant</h3>
-        <button
+        <ButtonComponent
+          label="Tambah Tenant"
           onClick={handleOpenAddModal}
-          className="bg-blue-500 hover:bg-blue-600 transition-all text-white px-4 py-2 rounded-lg flex items-center gap-1"
-        >
-          <IconPlus size={20} /> Tambah Tenant
-        </button>
+          isPrimary={true}
+          isFullWidth={false}
+          type="button"
+          icon={<IconPlus size={20} />}
+          isIconEnable={true}
+        />
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <StatsCard
           label="Total Tenant"
-          amount={10}
+          amount={data?.totalLocation || 0}
           isChange={false}
           icon={<IconBuildingStore />}
         />
         <StatsCard
           label="Tenant Aktif"
-          amount={10}
+          amount={data?.totalActiveLocation || 0}
           isChange={false}
           icon={<IconBuildingStore />}
         />
         <StatsCard
           label="Total Admin"
-          amount={10}
+          amount={data?.totalAdmin || 0}
           isChange={false}
           icon={<IconBuildingStore />}
         />
         <StatsCard
           label="Tenant Baru (Bulan ini)"
-          amount={10}
+          amount={data?.totalNewTenantsThisMonth || 0}
           isChange={false}
           icon={<IconBuildingStore />}
         />
       </div>
+
       <div className="space-y-2">
-        <div className="flex bg-white rounded-lg shadow-sm">
+        <div className="flex bg-white rounded-lg shadow-sm font-semibold text-gray-700">
           <div className="p-4 flex-1">TENANT</div>
           <div className="p-4 flex-1">KONTAK</div>
-          <div className="p-4 w-28 text-center">STATUS</div>
+          <div className="p-4 w-32 text-center">STATUS</div>
           <div className="p-4 w-28 text-center">ADMIN</div>
           <div className="p-4 w-28 text-center">AKSI</div>
         </div>
-        <div className="flex items-center bg-white rounded-lg shadow-sm border-t border-gray-200">
-          <div className="p-4 flex-1 flex flex-col">
-            <span className="font-medium">{sampleTenant.name}</span>
-            <span className="text-gray-500">{sampleTenant.address}</span>
+
+        {locations.length > 0 ? (
+          locations.map((item) => (
+            <div key={item.id} className="flex items-center bg-white rounded-lg shadow-sm border-t border-gray-200 hover:bg-gray-50 transition-colors">
+              <div className="p-4 flex-1 flex flex-col">
+                <span className="font-medium text-gray-900">{item.name}</span>
+                <span className="text-gray-500 text-sm">{item.address}</span>
+              </div>
+              <div className="p-4 flex-1 flex flex-col">
+                <span className="font-medium text-gray-900">{item.phone}</span>
+              </div>
+              <div className="p-4 w-32 flex justify-center">
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${item.isActive
+                  ? 'bg-green-100 text-green-500 border border-green-500'
+                  : 'bg-red-100 text-red-500 border border-red-500'
+                  }`}>
+                  {item.isActive ? 'Aktif' : 'Tidak Aktif'}
+                </span>
+              </div>
+              <div className="p-4 w-28 text-center text-gray-700 font-medium">{item.totalAdmin}</div>
+              <div className="p-4 w-28 flex justify-center gap-1">
+                <button
+                  onClick={() => handleOpenEditModal(item)}
+                  className="p-2 rounded-full hover:bg-blue-50 transition-all group cursor-pointer"
+                  title="Edit Tenant"
+                >
+                  <IconEdit size={20} className="text-blue-500 group-hover:scale-110 transition-transform" />
+                </button>
+                <button
+                  onClick={() => handleDelete(item.id)}
+                  className="p-2 rounded-full hover:bg-red-50 transition-all group cursor-pointer"
+                  title="Hapus Tenant"
+                >
+                  <IconTrash size={20} className="text-red-500 group-hover:scale-110 transition-transform" />
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="bg-white p-8 rounded-lg shadow-sm text-center text-gray-500">
+            Belum ada data tenant.
           </div>
-          <div className="p-4 flex-1 flex flex-col">
-            <span className="font-medium">{sampleTenant.phone}</span>
-            <span className="text-gray-500">{sampleTenant.email}</span>
-          </div>
-          <div className="p-4 w-28 bg-red">Tidak Aktif</div>
-          <div className="p-4 w-28 text-center">3</div>
-          <div className="p-4 w-28 flex justify-center">
-            <button
-              onClick={() => handleOpenEditModal(sampleTenant)}
-              className="p-2 rounded-full hover:bg-blue-50 transition-all"
-            >
-              <IconEdit size={20} className="text-blue-500" />
-            </button>
-            <button className="p-2 rounded-full hover:bg-red-50 transition-all">
-              <IconTrash size={20} className="text-red-500" />
-            </button>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Tenant Modal (Add/Edit) */}
@@ -122,6 +230,11 @@ const ManagementTenantPage = () => {
         onSubmit={handleSubmit}
         mode={modalMode}
         initialData={editData}
+      />
+
+      <Toast
+        toasts={toasts}
+        onRemove={removeToast}
       />
     </div>
   );

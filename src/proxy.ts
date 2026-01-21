@@ -10,7 +10,7 @@ const roleBasedRoutes = {
 // Route yang bisa diakses tanpa login
 const publicRoutes = ['/login'];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // Ambil token dan user dari cookie atau localStorage (via header)

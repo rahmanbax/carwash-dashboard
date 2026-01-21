@@ -31,8 +31,19 @@ export interface SuperAdminStats {
     todayQueue: QueueItem[];
 }
 
-export interface StatsResponse {
+export interface AdminStats {
+    date: string;
+    todayRevenue: number;
+    totalWashedToday: number;
+    activeQueue: number;
+    weeklyRevenue: WeeklyRevenue;
+    todayWashingStatistics: WashingStatistic[];
+    todayQueue: QueueItem[];
+}
+
+export interface AdminStatsResponse {
     status: string;
     message: string;
-    data: SuperAdminStats;
+    data: AdminStats;
 }
+

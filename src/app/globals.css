@@ -11,4 +11,27 @@
     --color-cranberry-700: #8f2926;
     --color-cranberry-800: #5f1b19;
     --color-cranberry-900: #300e0d;
+
+    @keyframes slide-in {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes fade-out {
+        from {
+            opacity: 1;
+        }
+        to {
+            opacity: 0;
+        }
+    }
+
+    --animate-toast-in: slide-in 0.5s ease-out forwards;
+    --animate-toast-out: fade-out 0.3s ease-in forwards;
 }

@@ -25,7 +25,7 @@ const VehicleStatusCard = ({ data }: { data: VehicleStatusCardProps }) => {
         <div className="flex flex-col">
           <h3 className="font-semibold">{data.plat}</h3>
           <div className="flex gap-2">
-            <p>{data.kategori}</p>
+            <p className="capitalize">{data.kategori}</p>
             <span>-</span>
             <p>{data.jamBooking}</p>
           </div>

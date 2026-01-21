@@ -3,13 +3,14 @@ import { IconEye, IconEyeOff } from "@tabler/icons-react";
 
 type PasswordInputProps = {
     id: string,
+    label?: string,
     value?: string,
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
     isRed: boolean,
     required: boolean
 }
 
-const PasswordInput = ({ id, value, onChange, isRed, required }: PasswordInputProps) => {
+const PasswordInput = ({ id, label = "Password", value, onChange, isRed, required }: PasswordInputProps) => {
     const [showPassword, setShowPassword] = useState(false);
     return (
         <div>
@@ -17,7 +18,7 @@ const PasswordInput = ({ id, value, onChange, isRed, required }: PasswordInputPr
                 htmlFor={id}
                 className="block text-sm font-semibold text-gray-900 mb-2"
             >
-                Password
+                {label}
             </label>
             <div className="relative">
                 <input

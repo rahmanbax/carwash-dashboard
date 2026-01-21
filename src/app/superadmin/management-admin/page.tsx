@@ -10,24 +10,23 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 
-// Sample tenant list (akan diganti dengan data dari API)
-const tenantList = [
-  { id: "1", name: "Tel-U Carwash Bandung" },
-  { id: "2", name: "Tel-U Carwash Jakarta" },
-  { id: "3", name: "Tel-U Carwash Surabaya" },
-];
-
-// Sample admin data
-const sampleAdmin: AdminFormData = {
-  username: "admin_bandung",
-  password: "",
-  fullName: "Admin 1 TelU Bandung",
-  email: "admin1@carwash.com",
-  phone: "08123456789",
-  tenantId: "1",
-};
+import { useAdmins, useUpdateAdmin, useCreateAdmin } from "@/hooks/useAdmins";
+import { useSuperadminLocations } from "@/hooks/useLocations";
+import { useToast } from "@/hooks/useToast";
+import Toast from "@/components/Toast";
+import ErrorView from "@/components/ErrorView";
+import { Admin } from "@/types/admin";
+import { getDate, formatDateTime } from "@/utils/getDate";
+import ManagementSkeleton from "@/components/skeleton/ManagementSkeleton";
+import ButtonComponent from "@/components/buttons/ButtonComponent";
 
 const ManagementAdminPage = () => {
+  const { data, isLoading, isError, refetch } = useAdmins();
+  const { data: tenantData } = useSuperadminLocations();
+  const updateAdminMutation = useUpdateAdmin();
+  const createAdminMutation = useCreateAdmin();
+  const { toasts, showToast, removeToast } = useToast();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [editData, setEditData] = useState<AdminFormData | undefined>();
@@ -38,100 +37,181 @@ const ManagementAdminPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (admin: AdminFormData) => {
+  const handleOpenEditModal = (admin: Admin) => {
     setModalMode("edit");
-    setEditData(admin);
+    setEditData({
+      id: admin.id,
+      username: admin.username,
+      password: "",
+      fullName: admin.name,
+      email: admin.email,
+      phone: admin.phone,
+      tenantId: admin.locationId.toString(),
+    });
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (data: AdminFormData) => {
+  const handleSubmit = async (formData: AdminFormData) => {
     if (modalMode === "add") {
-      // console.log("New admin:", data);
-      // TODO: Implement API call to add admin
+      try {
+        const createData = {
+          name: formData.fullName,
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          phone: formData.phone,
+          locationId: parseInt(formData.tenantId),
+        };
+
+        await createAdminMutation.mutateAsync(createData);
+        showToast("Berhasil menambahkan admin baru", "success");
+        setIsModalOpen(false);
+      } catch (error: any) {
+        const message = error.response?.data?.message || "Gagal menambahkan admin";
+        showToast(message, "error");
+        console.error("Failed to create admin:", error);
+      }
     } else {
-      // console.log("Updated admin:", data);
-      // TODO: Implement API call to update admin
+      if (formData.id) {
+        try {
+          const updateData: any = {
+            name: formData.fullName,
+            username: formData.username,
+            email: formData.email,
+            phone: formData.phone,
+            locationId: parseInt(formData.tenantId),
+          };
+
+          // Include password only if it's not empty
+          if (formData.password?.trim() !== "") {
+            updateData.password = formData.password;
+          }
+
+          await updateAdminMutation.mutateAsync({
+            id: formData.id,
+            data: updateData,
+          });
+          showToast("Berhasil memperbarui data admin", "success");
+          setIsModalOpen(false);
+        } catch (error: any) {
+          const message = error.response?.data?.message || "Gagal memperbarui data admin";
+          showToast(message, "error");
+          console.error("Failed to update admin:", error);
+        }
+      }
     }
   };
 
-  // Get tenant name by ID
-  const getTenantName = (tenantId: string) => {
-    const tenant = tenantList.find((t) => t.id === tenantId);
-    return tenant?.name || "-";
-  };
+  if (isLoading) {
+    return <ManagementSkeleton />;
+  }
+
+  if (isError) {
+    return <ErrorView onRetry={() => refetch()} />;
+  }
+
+  const admins = data?.admins || [];
+  const tenants = tenantData?.locations.map(loc => ({
+    id: loc.id.toString(),
+    name: loc.name
+  })) || [];
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="font-semibold text-lg">Manajemen Admin Semua Tenant</h3>
-        <button
+        <h3 className="font-semibold text-lg text-gray-800">Manajemen Admin Semua Tenant</h3>
+        <ButtonComponent
+          label="Tambah Admin"
           onClick={handleOpenAddModal}
-          className="bg-blue-500 hover:bg-blue-600 transition-all text-white px-4 py-2 rounded-lg flex items-center gap-1"
-        >
-          <IconPlus size={20} /> Tambah Admin
-        </button>
+          isPrimary={true}
+          isFullWidth={false}
+          type="button"
+          icon={<IconPlus size={20} />}
+          isIconEnable={true}
+        />
       </div>
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           label="Total Admin"
-          amount={10}
+          amount={data?.totalAdmin || 0}
           isChange={false}
           icon={<IconBuildingStore />}
         />
         <StatsCard
           label="Admin Aktif"
-          amount={10}
+          amount={data?.activeAdmin || 0}
           isChange={false}
           icon={<IconBuildingStore />}
         />
         <StatsCard
           label="Admin Tidak Aktif"
-          amount={10}
+          amount={data?.inactiveAdmin || 0}
           isChange={false}
           icon={<IconBuildingStore />}
         />
         <StatsCard
           label="Login Hari Ini"
-          amount={10}
+          amount={data?.loginToday || 0}
           isChange={false}
           icon={<IconBuildingStore />}
         />
       </div>
+
       <div className="space-y-2">
-        <div className="flex bg-white rounded-lg shadow-sm">
+        <div className="flex bg-white rounded-lg shadow-sm font-semibold text-gray-700">
           <div className="p-4 flex-1">ADMIN</div>
           <div className="p-4 flex-1">KONTAK</div>
           <div className="p-4 flex-1">TENANT</div>
-          <div className="p-4 w-28 text-center">STATUS</div>
+          <div className="p-4 w-32 text-center">STATUS</div>
           <div className="p-4 w-52 text-center">LOGIN TERAKHIR</div>
           <div className="p-4 w-28 text-center">AKSI</div>
         </div>
-        <div className="flex items-center bg-white rounded-lg shadow-sm border-t border-gray-200">
-          <div className="p-4 flex-1 flex flex-col">
-            <span className="font-medium">{sampleAdmin.fullName}</span>
-            <span className="text-gray-500">{sampleAdmin.username}</span>
+
+        {admins.length > 0 ? (
+          admins.map((admin) => (
+            <div key={admin.id} className="flex items-center bg-white rounded-lg shadow-sm border-t border-gray-200 hover:bg-gray-50 transition-colors">
+              <div className="p-4 flex-1 flex flex-col">
+                <span className="font-medium text-gray-900">{admin.name}</span>
+                <span className="text-gray-500 text-sm">{admin.username}</span>
+              </div>
+              <div className="p-4 flex-1 flex flex-col">
+                <span className="font-medium text-gray-900">{admin.phone}</span>
+                <span className="text-gray-500 text-sm">{admin.email}</span>
+              </div>
+              <div className="p-4 flex-1">
+                {admin.location}
+              </div>
+              <div className="p-4 w-32 flex justify-center">
+                <span className={`px-2 py-1 rounded-full text-xs border font-medium ${admin.isActive ? 'bg-green-100 text-green-500 border border-green-500' : 'bg-red-100 text-red-500 border border-red-500'}`}>
+                  {admin.isActive ? 'Aktif' : 'Tidak Aktif'}
+                </span>
+              </div>
+              <div className="p-4 w-52 text-center">
+                {admin.lastLogin ? formatDateTime(admin.lastLogin) : 'Belum pernah login'}
+              </div>
+              <div className="p-4 w-28 flex justify-center gap-1">
+                <button
+                  onClick={() => handleOpenEditModal(admin)}
+                  className="p-2 rounded-full hover:bg-blue-50 transition-all group cursor-pointer"
+                  title="Edit Admin"
+                >
+                  <IconEdit size={20} className="text-blue-500 group-hover:scale-110 transition-transform" />
+                </button>
+                <button
+                  className="p-2 rounded-full hover:bg-red-50 transition-all group  cursor-pointer"
+                  title="Hapus Admin"
+                >
+                  <IconTrash size={20} className="text-red-500 group-hover:scale-110 transition-transform" />
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="bg-white p-8 rounded-lg shadow-sm text-center text-gray-500">
+            Belum ada data admin.
           </div>
-          <div className="p-4 flex-1 flex flex-col">
-            <span className="font-medium">{sampleAdmin.phone}</span>
-            <span className="text-gray-500">{sampleAdmin.email}</span>
-          </div>
-          <div className="p-4 flex-1">
-            {getTenantName(sampleAdmin.tenantId)}
-          </div>
-          <div className="p-4 w-28 text-center">Aktif</div>
-          <div className="p-4 w-52 text-center">08/09/2025, 09.30</div>
-          <div className="p-4 w-28 flex justify-center">
-            <button
-              onClick={() => handleOpenEditModal(sampleAdmin)}
-              className="p-2 rounded-full hover:bg-blue-50 transition-all"
-            >
-              <IconEdit size={20} className="text-blue-500" />
-            </button>
-            <button className="p-2 rounded-full hover:bg-red-50 transition-all">
-              <IconTrash size={20} className="text-red-500" />
-            </button>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Admin Modal (Add/Edit) */}
@@ -141,10 +221,16 @@ const ManagementAdminPage = () => {
         onSubmit={handleSubmit}
         mode={modalMode}
         initialData={editData}
-        tenants={tenantList}
+        tenants={tenants}
+      />
+
+      <Toast
+        toasts={toasts}
+        onRemove={removeToast}
       />
     </div>
   );
 };
 
 export default ManagementAdminPage;
+

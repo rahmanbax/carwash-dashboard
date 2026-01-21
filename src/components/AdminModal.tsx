@@ -1,9 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { IconX, IconEye, IconEyeOff } from "@tabler/icons-react";
+import { IconX } from "@tabler/icons-react";
+import TextInput from "./inputs/TextInput";
+import PasswordInput from "./inputs/PasswordInput";
+import DropdownInput from "./inputs/DropdownInput";
+import ButtonComponent from "./buttons/ButtonComponent";
 
 export type AdminFormData = {
+  id?: number;
   username: string;
   password: string;
   fullName: string;
@@ -20,7 +25,7 @@ type Tenant = {
 type AdminModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: AdminFormData) => void;
+  onSubmit: (data: AdminFormData) => Promise<void> | void;
   mode: "add" | "edit";
   initialData?: AdminFormData;
   tenants: Tenant[];
@@ -44,7 +49,6 @@ const AdminModal = ({
   tenants,
 }: AdminModalProps) => {
   const [formData, setFormData] = useState<AdminFormData>(emptyFormData);
-  const [showPassword, setShowPassword] = useState(false);
 
   // Update form data when initialData changes (for edit mode)
   useEffect(() => {
@@ -60,17 +64,27 @@ const AdminModal = ({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
-    setFormData(emptyFormData);
-    onClose();
+    setIsSubmitting(true);
+    try {
+      await onSubmit(formData);
+      setFormData(emptyFormData);
+      onClose();
+    } catch (error) {
+      console.error("Submit error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
-    setFormData(emptyFormData);
-    setShowPassword(false);
-    onClose();
+    if (!isSubmitting) {
+      setFormData(emptyFormData);
+      onClose();
+    }
   };
 
   if (!isOpen) return null;
@@ -99,153 +113,81 @@ const AdminModal = ({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Username
-            </label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Masukkan username"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-              required
-            />
-          </div>
+          <TextInput
+            id="username"
+            label="Username"
+            value={formData.username}
+            onChange={handleChange}
+            isRed={false}
+            required={true}
+          />
 
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Password {isEditMode && "(kosongkan jika tidak ingin mengubah)"}
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Masukkan password"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all pr-10"
-                required={!isEditMode}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword ? (
-                  <IconEye size={18} />
-                ) : (
-                  <IconEyeOff size={18} />
-                )}
-              </button>
-            </div>
-          </div>
+          <PasswordInput
+            id="password"
+            label={`Password ${isEditMode ? "(kosongkan jika tidak ingin mengubah)" : ""}`}
+            value={formData.password}
+            onChange={handleChange}
+            isRed={false}
+            required={!isEditMode}
+          />
 
-          <div>
-            <label
-              htmlFor="fullName"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Nama Lengkap
-            </label>
-            <input
-              type="text"
-              id="fullName"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-              placeholder="Masukkan nama lengkap"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-              required
-            />
-          </div>
+          <TextInput
+            id="fullName"
+            label="Nama Lengkap"
+            value={formData.fullName}
+            onChange={handleChange}
+            isRed={false}
+            required={true}
+          />
 
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Masukkan email"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-              required
-            />
-          </div>
+          <TextInput
+            id="email"
+            label="Email"
+            value={formData.email}
+            onChange={handleChange}
+            isRed={false}
+            required={true}
+          />
 
-          <div>
-            <label
-              htmlFor="phone"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Nomor Telepon
-            </label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="Masukkan nomor telepon"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-              required
-            />
-          </div>
+          <TextInput
+            id="phone"
+            label="Nomor Telepon"
+            value={formData.phone}
+            onChange={handleChange}
+            isRed={false}
+            required={true}
+          />
 
-          <div>
-            <label
-              htmlFor="tenantId"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Tenant
-            </label>
-            <select
-              id="tenantId"
-              name="tenantId"
-              value={formData.tenantId}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all bg-white"
-              required
-            >
-              <option value="">Pilih Tenant</option>
-              {tenants.map((tenant) => (
-                <option key={tenant.id} value={tenant.id}>
-                  {tenant.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <DropdownInput
+            id="tenantId"
+            label="Tenant"
+            value={formData.tenantId}
+            onChange={handleChange}
+            isRed={false}
+            required={true}
+            data={tenants}
+          />
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
-            >
-              {isEditMode ? "Perbarui" : "Simpan"}
-            </button>
+            <div className="flex-1">
+              <ButtonComponent
+                label="Batal"
+                onClick={handleClose}
+                isPrimary={false}
+                isFullWidth={true}
+                type="button"
+              />
+            </div>
+            <div className="flex-1">
+              <ButtonComponent
+                label={isSubmitting ? "Menyimpan..." : "Simpan"}
+                isPrimary={true}
+                isFullWidth={true}
+                type="submit"
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
         </form>
       </div>

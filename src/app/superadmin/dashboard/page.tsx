@@ -6,13 +6,14 @@ import BarChart from "@/components/charts/BarChart";
 import { IconUser } from "@tabler/icons-react";
 import VehicleStatusCard from "@/components/vehicle/VehicleStatusCard";
 import { useSuperadminStats } from "@/hooks/useSuperadminStats";
+import DashboardSkeleton from "@/components/skeleton/DashboardSkeleton";
 
 
 
 const SuperadminDashboardPage = () => {
   const { data: stats, isLoading } = useSuperadminStats();
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <DashboardSkeleton />;
   if (!stats) return <div>No data available</div>;
 
   // Transform weekly revenue for LineChart
@@ -50,7 +51,7 @@ const SuperadminDashboardPage = () => {
       {/* Line Area Chart */}
       <LineAreaChart
         data={transactionData}
-        title={`Pendapatan Minggu Ini (${stats.weeklyRevenue.range.start} - ${stats.weeklyRevenue.range.end})`}
+        title={`Pendapatan Minggu Ini`}
         height={350}
       />
 
@@ -64,7 +65,7 @@ const SuperadminDashboardPage = () => {
         <div className="w-full bg-white p-5 rounded-lg shadow-sm">
           <h3 className="text-lg font-semibold">Antrian Kendaraan</h3>
           <div className="space-y-2 mt-6">
-            {stats.todayQueue.map((item: any) => (
+            {stats.todayQueue.length > 0 ? stats.todayQueue.map((item: any) => (
               <VehicleStatusCard
                 key={item.bookingNumber}
                 data={{
@@ -74,7 +75,9 @@ const SuperadminDashboardPage = () => {
                   status: item.status
                 }}
               />
-            ))}
+            )) : (
+              <div className="text-center text-gray-500 py-4">Tidak ada antrian</div>
+            )}
           </div>
         </div>
       </div>

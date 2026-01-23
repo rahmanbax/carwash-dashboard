@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import StatsCard from "@/components/StatsCard";
 import LineAreaChart from "@/components/charts/LineAreaChart";
 import BarChart from "@/components/charts/BarChart";
@@ -9,7 +10,11 @@ import { useAdminStats } from "@/hooks/useAdminStats";
 import DashboardSkeleton from "@/components/skeleton/DashboardSkeleton";
 
 const AdminDashboardPage = () => {
-  const { data: stats, isLoading } = useAdminStats();
+  const { data: stats, isLoading, refetch } = useAdminStats();
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   if (isLoading) return <DashboardSkeleton cards={3} />;
   if (!stats) return <div className="p-4 text-center">Data tidak tersedia</div>;
@@ -32,7 +37,7 @@ const AdminDashboardPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <StatsCard
           label="Pendapatan Hari Ini"
-          amount={stats.todayRevenue}
+          amount={`Rp ${stats.todayRevenue.toLocaleString('id-ID')}`}
           change={0}
           isChange={false}
           icon={<IconCoin />}

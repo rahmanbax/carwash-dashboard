@@ -1,5 +1,5 @@
 import apiClient from '@/api/apiClient';
-import { CreateTransactionRequest, TransactionResponse, TransactionsListResponse } from '@/types/transaction';
+import { CreateTransactionRequest, TransactionResponse, TransactionsListResponse, TransactionHistoryResponse } from '@/types/transaction';
 
 export const transactionService = {
     getTransactions: async (date?: string): Promise<TransactionsListResponse> => {
@@ -14,6 +14,18 @@ export const transactionService = {
     },
     createTransaction: async (data: CreateTransactionRequest): Promise<any> => {
         const response = await apiClient.post('/transactions', data);
+        return response.data;
+    },
+    getTransactionHistory: async (startDate?: string, endDate?: string): Promise<TransactionHistoryResponse> => {
+        const response = await apiClient.get<TransactionHistoryResponse>('/transactions/history', {
+            params: { startDate, endDate }
+        });
+        return response.data;
+    },
+    downloadInvoice: async (bookingIds: number[]): Promise<Blob> => {
+        const response = await apiClient.post('/invoices', { bookingIds }, {
+            responseType: 'blob'
+        });
         return response.data;
     },
 };

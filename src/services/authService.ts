@@ -105,5 +105,12 @@ export const authService = {
      */
     isAuthenticated: (): boolean => {
         return !!localStorage.getItem('token');
+    },
+
+    /**
+     * Heartbeat - update status online secara berkala
+     */
+    heartbeat: async (): Promise<void> => {
+        await apiClient.post('/auth/heartbeat');
     }
 };

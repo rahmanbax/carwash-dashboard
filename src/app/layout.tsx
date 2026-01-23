@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Carwash Dashboard",
-  description: "Dashboard Carwash",
+  title: "Car Wash Dashboard",
+  description: "Dashboard Car Wash",
   icons: {
     icon: [
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },

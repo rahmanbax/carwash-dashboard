@@ -69,15 +69,18 @@ const MainLayout = ({ children }: MainLayoutProps) => {
               className="flex items-center gap-2 rounded-lg cursor-pointer"
             >
               {/* Profile Photo */}
-              <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+              <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0">
                 <Image
-                  src="/profile-placeholder.png"
+                  src={user?.photoUrl || '/profile-placeholder.png'}
                   alt="Profile"
                   width={40}
                   height={40}
                   className="object-cover w-full h-full"
+                  unoptimized={true}
                   onError={(e) => {
-                    e.currentTarget.style.display = "none";
+                    // Fallback to placeholder if backend image fails
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/profile-placeholder.png';
                   }}
                 />
               </div>

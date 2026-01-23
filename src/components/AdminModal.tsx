@@ -92,7 +92,7 @@ const AdminModal = ({
   const isEditMode = mode === "edit";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center h-screen">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
 
@@ -105,7 +105,7 @@ const AdminModal = ({
           </h2>
           <button
             onClick={handleClose}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            className="p-1 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
           >
             <IconX size={20} className="text-gray-500" />
           </button>

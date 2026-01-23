@@ -9,6 +9,8 @@ export interface User {
     email: string;
     name: string;
     role: 'ADMIN' | 'CUSTOMER' | 'SUPERADMIN';
+    photoUrl: string;
+    phone?: string;
 }
 
 export interface LoginResponse {

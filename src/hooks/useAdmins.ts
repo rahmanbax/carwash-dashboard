@@ -35,3 +35,22 @@ export const useCreateAdmin = () => {
     });
 };
 
+export const useDeleteAdmin = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: number) => adminService.deleteAdmin(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admins"] });
+        },
+    });
+};
+export const useUpdateProfile = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: { name: string; username: string; email: string; phone: string; profilePhoto?: File }) =>
+            adminService.updateProfile(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admins"] });
+        },
+    });
+};

@@ -34,7 +34,7 @@ const Sidebar = () => {
     <aside className="w-64 flex flex-col py-2 px-5 bg-white border-r border-gray-200">
       <a href="/" className="flex items-center p-2 mb-4 w-fit">
         <Image src="/tel-u-logo.png" alt="TelU Logo" width={20} height={20} />
-        <span className="ml-2 font-semibold text-xl">Carwash</span>
+        <span className="ml-2 font-semibold text-xl">Car Wash</span>
       </a>
       <nav className="flex-1">
         <ul>

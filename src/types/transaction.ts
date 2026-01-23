@@ -39,3 +39,28 @@ export interface CreateTransactionRequest {
     vehicleType: string;
     serviceId: number;
 }
+
+export interface TransactionHistory {
+    id: number;
+    bookingNumber: string;
+    date: string;
+    vehiclePlate: string;
+    vehicleType: string;
+    customerName: string;
+    customerPhone: string;
+    serviceName: string;
+    servicePrice: number;
+    status: string;
+}
+
+export interface TransactionHistoryResponse {
+    status: string;
+    message: string;
+    data: {
+        range: {
+            start: string;
+            end: string;
+        };
+        transactions: TransactionHistory[];
+    };
+}

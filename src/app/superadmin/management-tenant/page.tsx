@@ -5,9 +5,11 @@ import StatsCard from "@/components/StatsCard";
 import TenantModal, { TenantFormData } from "@/components/TenantModal";
 import {
   IconBuildingStore,
+  IconCheck,
   IconEdit,
   IconPlus,
   IconTrash,
+  IconUsers,
 } from "@tabler/icons-react";
 
 import { useSuperadminLocations, useUpdateLocation, useCreateLocation, useDeleteLocation } from "@/hooks/useLocations";
@@ -154,19 +156,19 @@ const ManagementTenantPage = () => {
           label="Tenant Aktif"
           amount={data?.totalActiveLocation || 0}
           isChange={false}
-          icon={<IconBuildingStore />}
+          icon={<IconCheck />}
         />
         <StatsCard
           label="Total Admin"
           amount={data?.totalAdmin || 0}
           isChange={false}
-          icon={<IconBuildingStore />}
+          icon={<IconUsers />}
         />
         <StatsCard
           label="Tenant Baru (Bulan ini)"
           amount={data?.totalNewTenantsThisMonth || 0}
           isChange={false}
-          icon={<IconBuildingStore />}
+          icon={<IconPlus />}
         />
       </div>
 
@@ -179,48 +181,50 @@ const ManagementTenantPage = () => {
           <div className="p-4 w-28 text-center">AKSI</div>
         </div>
 
-        {locations.length > 0 ? (
-          locations.map((item) => (
-            <div key={item.id} className="flex items-center bg-white rounded-lg shadow-sm border-t border-gray-200 hover:bg-gray-50 transition-colors">
-              <div className="p-4 flex-1 flex flex-col">
-                <span className="font-medium text-gray-900">{item.name}</span>
-                <span className="text-gray-500 text-sm">{item.address}</span>
+        <div className="rounded-lg overflow-hidden shadow-sm">
+          {locations.length > 0 ? (
+            locations.map((item) => (
+              <div key={item.id} className="flex items-center bg-white border-t border-gray-200 hover:bg-gray-50 transition-colors">
+                <div className="p-4 flex-1 flex flex-col">
+                  <span className="font-medium text-gray-900">{item.name}</span>
+                  <span className="text-gray-500 text-sm">{item.address}</span>
+                </div>
+                <div className="p-4 flex-1 flex flex-col">
+                  <span className="font-medium text-gray-900">{item.phone}</span>
+                </div>
+                <div className="p-4 w-32 flex justify-center">
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${item.isActive
+                    ? 'bg-green-100 text-green-500 border border-green-500'
+                    : 'bg-red-100 text-red-500 border border-red-500'
+                    }`}>
+                    {item.isActive ? 'Aktif' : 'Tidak Aktif'}
+                  </span>
+                </div>
+                <div className="p-4 w-28 text-center text-gray-700 font-medium">{item.totalAdmin}</div>
+                <div className="p-4 w-28 flex justify-center gap-1">
+                  <button
+                    onClick={() => handleOpenEditModal(item)}
+                    className="p-2 rounded-full hover:bg-blue-50 transition-all group cursor-pointer"
+                    title="Edit Tenant"
+                  >
+                    <IconEdit size={20} className="text-blue-500 group-hover:scale-110 transition-transform" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="p-2 rounded-full hover:bg-red-50 transition-all group cursor-pointer"
+                    title="Hapus Tenant"
+                  >
+                    <IconTrash size={20} className="text-red-500 group-hover:scale-110 transition-transform" />
+                  </button>
+                </div>
               </div>
-              <div className="p-4 flex-1 flex flex-col">
-                <span className="font-medium text-gray-900">{item.phone}</span>
-              </div>
-              <div className="p-4 w-32 flex justify-center">
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${item.isActive
-                  ? 'bg-green-100 text-green-500 border border-green-500'
-                  : 'bg-red-100 text-red-500 border border-red-500'
-                  }`}>
-                  {item.isActive ? 'Aktif' : 'Tidak Aktif'}
-                </span>
-              </div>
-              <div className="p-4 w-28 text-center text-gray-700 font-medium">{item.totalAdmin}</div>
-              <div className="p-4 w-28 flex justify-center gap-1">
-                <button
-                  onClick={() => handleOpenEditModal(item)}
-                  className="p-2 rounded-full hover:bg-blue-50 transition-all group cursor-pointer"
-                  title="Edit Tenant"
-                >
-                  <IconEdit size={20} className="text-blue-500 group-hover:scale-110 transition-transform" />
-                </button>
-                <button
-                  onClick={() => handleDelete(item.id)}
-                  className="p-2 rounded-full hover:bg-red-50 transition-all group cursor-pointer"
-                  title="Hapus Tenant"
-                >
-                  <IconTrash size={20} className="text-red-500 group-hover:scale-110 transition-transform" />
-                </button>
-              </div>
+            ))
+          ) : (
+            <div className="bg-white p-8 rounded-lg shadow-sm text-center text-gray-500">
+              Belum ada data tenant.
             </div>
-          ))
-        ) : (
-          <div className="bg-white p-8 rounded-lg shadow-sm text-center text-gray-500">
-            Belum ada data tenant.
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Tenant Modal (Add/Edit) */}

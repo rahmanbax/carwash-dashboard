@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { IconX } from "@tabler/icons-react";
-import TextInput from "./inputs/TextInput";
-import DropdownInput from "./inputs/DropdownInput";
-import ButtonComponent from "./buttons/ButtonComponent";
 import { Transaction } from "@/types/transaction";
+import VehicleStatus from "./vehicle/VehicleStatus";
 
 type TransactionStatusModalProps = {
     isOpen: boolean;
@@ -15,11 +13,11 @@ type TransactionStatusModalProps = {
 };
 
 const statusOptions = [
-    { id: "BOOKED", name: "BOOKED" },
-    { id: "DITERIMA", name: "DITERIMA" },
-    { id: "DICUCI", name: "DICUCI" },
-    { id: "SIAP_DIAMBIL", name: "SIAP DIAMBIL" },
-    { id: "SELESAI", name: "SELESAI" },
+    { id: "BOOKED", name: "Dibooking" },
+    { id: "DITERIMA", name: "Diterima" },
+    { id: "DICUCI", name: "Sedang Dicuci" },
+    { id: "SIAP_DIAMBIL", name: "Siap Diambil" },
+    { id: "SELESAI", name: "Selesai" },
 ];
 
 const TransactionStatusModal = ({
@@ -28,22 +26,14 @@ const TransactionStatusModal = ({
     onSubmit,
     transaction,
 }: TransactionStatusModalProps) => {
-    const [status, setStatus] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    useEffect(() => {
-        if (isOpen && transaction) {
-            setStatus(transaction.status);
-        }
-    }, [isOpen, transaction]);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!transaction) return;
+    const handleStatusClick = async (newStatus: string) => {
+        if (!transaction || isSubmitting) return;
 
         setIsSubmitting(true);
         try {
-            await onSubmit(transaction.id, status);
+            await onSubmit(transaction.id, newStatus);
             onClose();
         } catch (error) {
             console.error("Update status error:", error);
@@ -55,7 +45,7 @@ const TransactionStatusModal = ({
     if (!isOpen || !transaction) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center h-screen">
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
@@ -64,7 +54,7 @@ const TransactionStatusModal = ({
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-semibold text-gray-900">
-                        Update Status Transaksi
+                        Update Status Kendaraan
                     </h2>
                     <button
                         onClick={onClose}
@@ -74,60 +64,31 @@ const TransactionStatusModal = ({
                     </button>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-900 mb-2">
-                                Plat Kendaraan
-                            </label>
-                            <div className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 font-medium uppercase">
-                                {transaction.vehiclePlate}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-900 mb-2">
-                                Nama Customer
-                            </label>
-                            <div className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
-                                {transaction.customerName}
-                            </div>
-                        </div>
-
-                        <DropdownInput
-                            id="status"
-                            label="Status Transaksi"
-                            value={status}
-                            onChange={(e) => setStatus(e.target.value)}
-                            isRed={false}
-                            required={true}
-                            data={statusOptions}
-                        />
+                <div className="space-y-3">
+                    <div className="mb-4">
+                        <p className="text-gray-500">Kendaraan: <span className="text-black">{transaction.vehiclePlate}</span></p>
+                        <p className="text-gray-500">Customer: <span className="text-black">{transaction.customerName}</span></p>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-3 pt-6">
-                        <div className="flex-1">
-                            <ButtonComponent
-                                label="Batal"
-                                onClick={onClose}
-                                isPrimary={false}
-                                isFullWidth={true}
-                                type="button"
-                            />
-                        </div>
-                        <div className="flex-1">
-                            <ButtonComponent
-                                label={isSubmitting ? "Memproses..." : "Update Status"}
-                                isPrimary={true}
-                                isFullWidth={true}
-                                type="submit"
+                    <div className="space-y-2">
+                        {statusOptions.map((option) => (
+                            <button
+                                key={option.id}
+                                onClick={() => handleStatusClick(option.id)}
                                 disabled={isSubmitting}
-                            />
-                        </div>
+                                className={`flex items-center justify-between p-2 border rounded-lg gap-2 w-full ${transaction.status === option.id
+                                    ? "bg-blue-50 border-blue-500"
+                                    : "border-gray-200 hover:border-blue-300 hover:bg-gray-50 bg-white"
+                                    } ${isSubmitting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                            >
+                                <span className={`font-medium ${transaction.status === option.id ? "text-blue-500" : "text-black"}`}>
+                                    {option.name}
+                                </span>
+                                <VehicleStatus status={option.id} />
+                            </button>
+                        ))}
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     );

@@ -5,12 +5,16 @@ import StatsCard from "@/components/StatsCard";
 import AdminModal, { AdminFormData } from "@/components/AdminModal";
 import {
   IconBuildingStore,
+  IconCheck,
   IconEdit,
+  IconLogin,
   IconPlus,
   IconTrash,
+  IconUsers,
+  IconX,
 } from "@tabler/icons-react";
 
-import { useAdmins, useUpdateAdmin, useCreateAdmin } from "@/hooks/useAdmins";
+import { useAdmins, useUpdateAdmin, useCreateAdmin, useDeleteAdmin } from "@/hooks/useAdmins";
 import { useSuperadminLocations } from "@/hooks/useLocations";
 import { useToast } from "@/hooks/useToast";
 import Toast from "@/components/Toast";
@@ -25,6 +29,7 @@ const ManagementAdminPage = () => {
   const { data: tenantData } = useSuperadminLocations();
   const updateAdminMutation = useUpdateAdmin();
   const createAdminMutation = useCreateAdmin();
+  const deleteAdminMutation = useDeleteAdmin();
   const { toasts, showToast, removeToast } = useToast();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -102,6 +107,19 @@ const ManagementAdminPage = () => {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus admin ini?")) {
+      try {
+        await deleteAdminMutation.mutateAsync(id);
+        showToast("Berhasil menghapus admin", "success");
+      } catch (error: any) {
+        const message = error.response?.data?.message || "Gagal menghapus admin";
+        showToast(message, "error");
+        console.error("Failed to delete admin:", error);
+      }
+    }
+  };
+
   if (isLoading) {
     return <ManagementSkeleton />;
   }
@@ -136,25 +154,25 @@ const ManagementAdminPage = () => {
           label="Total Admin"
           amount={data?.totalAdmin || 0}
           isChange={false}
-          icon={<IconBuildingStore />}
+          icon={<IconUsers />}
         />
         <StatsCard
           label="Admin Aktif"
           amount={data?.activeAdmin || 0}
           isChange={false}
-          icon={<IconBuildingStore />}
+          icon={<IconCheck />}
         />
         <StatsCard
           label="Admin Tidak Aktif"
           amount={data?.inactiveAdmin || 0}
           isChange={false}
-          icon={<IconBuildingStore />}
+          icon={<IconX />}
         />
         <StatsCard
           label="Login Hari Ini"
           amount={data?.loginToday || 0}
           isChange={false}
-          icon={<IconBuildingStore />}
+          icon={<IconLogin />}
         />
       </div>
 
@@ -168,50 +186,53 @@ const ManagementAdminPage = () => {
           <div className="p-4 w-28 text-center">AKSI</div>
         </div>
 
-        {admins.length > 0 ? (
-          admins.map((admin) => (
-            <div key={admin.id} className="flex items-center bg-white rounded-lg shadow-sm border-t border-gray-200 hover:bg-gray-50 transition-colors">
-              <div className="p-4 flex-1 flex flex-col">
-                <span className="font-medium text-gray-900">{admin.name}</span>
-                <span className="text-gray-500 text-sm">{admin.username}</span>
+        <div className="rounded-lg overflow-hidden shadow-sm">
+          {admins.length > 0 ? (
+            admins.map((admin) => (
+              <div key={admin.id} className="flex items-center bg-white border-t border-gray-200 hover:bg-gray-50 transition-colors">
+                <div className="p-4 flex-1 flex flex-col">
+                  <span className="font-medium text-gray-900">{admin.name}</span>
+                  <span className="text-gray-500 text-sm">{admin.username}</span>
+                </div>
+                <div className="p-4 flex-1 flex flex-col">
+                  <span className="font-medium text-gray-900">{admin.phone}</span>
+                  <span className="text-gray-500 text-sm">{admin.email}</span>
+                </div>
+                <div className="p-4 flex-1">
+                  {admin.location}
+                </div>
+                <div className="p-4 w-32 flex justify-center">
+                  <span className={`px-2 py-1 rounded-full text-xs border font-medium ${admin.isActive ? 'bg-green-100 text-green-500 border border-green-500' : 'bg-red-100 text-red-500 border border-red-500'}`}>
+                    {admin.isActive ? 'Aktif' : 'Tidak Aktif'}
+                  </span>
+                </div>
+                <div className="p-4 w-52 text-center">
+                  {admin.lastLogin ? formatDateTime(admin.lastLogin) : 'Belum pernah login'}
+                </div>
+                <div className="p-4 w-28 flex justify-center gap-1">
+                  <button
+                    onClick={() => handleOpenEditModal(admin)}
+                    className="p-2 rounded-full hover:bg-blue-50 transition-all group cursor-pointer"
+                    title="Edit Admin"
+                  >
+                    <IconEdit size={20} className="text-blue-500 group-hover:scale-110 transition-transform" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(admin.id)}
+                    className="p-2 rounded-full hover:bg-red-50 transition-all group  cursor-pointer"
+                    title="Hapus Admin"
+                  >
+                    <IconTrash size={20} className="text-red-500 group-hover:scale-110 transition-transform" />
+                  </button>
+                </div>
               </div>
-              <div className="p-4 flex-1 flex flex-col">
-                <span className="font-medium text-gray-900">{admin.phone}</span>
-                <span className="text-gray-500 text-sm">{admin.email}</span>
-              </div>
-              <div className="p-4 flex-1">
-                {admin.location}
-              </div>
-              <div className="p-4 w-32 flex justify-center">
-                <span className={`px-2 py-1 rounded-full text-xs border font-medium ${admin.isActive ? 'bg-green-100 text-green-500 border border-green-500' : 'bg-red-100 text-red-500 border border-red-500'}`}>
-                  {admin.isActive ? 'Aktif' : 'Tidak Aktif'}
-                </span>
-              </div>
-              <div className="p-4 w-52 text-center">
-                {admin.lastLogin ? formatDateTime(admin.lastLogin) : 'Belum pernah login'}
-              </div>
-              <div className="p-4 w-28 flex justify-center gap-1">
-                <button
-                  onClick={() => handleOpenEditModal(admin)}
-                  className="p-2 rounded-full hover:bg-blue-50 transition-all group cursor-pointer"
-                  title="Edit Admin"
-                >
-                  <IconEdit size={20} className="text-blue-500 group-hover:scale-110 transition-transform" />
-                </button>
-                <button
-                  className="p-2 rounded-full hover:bg-red-50 transition-all group  cursor-pointer"
-                  title="Hapus Admin"
-                >
-                  <IconTrash size={20} className="text-red-500 group-hover:scale-110 transition-transform" />
-                </button>
-              </div>
+            ))
+          ) : (
+            <div className="bg-white p-8 rounded-lg shadow-sm text-center text-gray-500">
+              Belum ada data admin.
             </div>
-          ))
-        ) : (
-          <div className="bg-white p-8 rounded-lg shadow-sm text-center text-gray-500">
-            Belum ada data admin.
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Admin Modal (Add/Edit) */}

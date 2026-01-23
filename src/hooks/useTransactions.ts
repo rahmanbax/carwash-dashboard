@@ -34,3 +34,13 @@ export const useCreateTransaction = () => {
     });
 };
 
+export const useTransactionHistory = (startDate?: string, endDate?: string) => {
+    return useQuery({
+        queryKey: ['transactionHistory', startDate, endDate],
+        queryFn: async () => {
+            const response = await transactionService.getTransactionHistory(startDate, endDate);
+            return response.data;
+        },
+    });
+};
+

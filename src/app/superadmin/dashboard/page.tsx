@@ -1,20 +1,23 @@
 "use client";
 
+import { useEffect } from "react";
 import StatsCard from "@/components/StatsCard";
 import LineAreaChart from "@/components/charts/LineAreaChart";
 import BarChart from "@/components/charts/BarChart";
-import { IconUser } from "@tabler/icons-react";
+import { IconBuildingStore, IconUsers } from "@tabler/icons-react";
 import VehicleStatusCard from "@/components/vehicle/VehicleStatusCard";
 import { useSuperadminStats } from "@/hooks/useSuperadminStats";
 import DashboardSkeleton from "@/components/skeleton/DashboardSkeleton";
 
-
-
 const SuperadminDashboardPage = () => {
-  const { data: stats, isLoading } = useSuperadminStats();
+  const { data: stats, isLoading, refetch } = useSuperadminStats();
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   if (isLoading) return <DashboardSkeleton />;
-  if (!stats) return <div>No data available</div>;
+  if (!stats) return <div>Data tidak tersedia</div>;
 
   // Transform weekly revenue for LineChart
   const transactionData = stats.weeklyRevenue.data.map((item: any) => ({
@@ -37,14 +40,14 @@ const SuperadminDashboardPage = () => {
           amount={stats.totalTenant}
           change={0}
           isChange={false}
-          icon={<IconUser />}
+          icon={<IconBuildingStore />}
         />
         <StatsCard
           label="Total Admin"
           amount={stats.totalAdmin}
           change={0}
           isChange={false}
-          icon={<IconUser />}
+          icon={<IconUsers />}
         />
       </div>
 

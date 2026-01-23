@@ -4,7 +4,7 @@ import React from "react";
 
 type StatsCardProps = {
   label: string;
-  amount: number;
+  amount: string | number;
   isChange: boolean;
   change?: number;
   icon: React.ReactNode;

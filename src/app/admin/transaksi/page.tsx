@@ -33,8 +33,6 @@ const TransactionPage = () => {
   const { data, isLoading } = useTransactions(selectedDate);
   const updateStatusMutation = useUpdateTransactionStatus();
 
-  if (isLoading) return <TransactionSkeleton />;
-
   const transactions = data?.transactions || [];
 
   const formatCurrency = (value: number) => {
@@ -59,6 +57,8 @@ const TransactionPage = () => {
       showToast(error.response?.data?.message || "Gagal memperbarui status", "error");
     }
   };
+
+  if (isLoading) return <TransactionSkeleton />;
 
   return (
     <div className="space-y-6">
@@ -121,7 +121,7 @@ const TransactionPage = () => {
                 <div className="p-4 w-44 flex justify-center">
                   <button
                     onClick={() => handleOpenStatusModal(transaction)}
-                    className="p-2 flex  items-center gap-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                    className="p-2 flex  items-center gap-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium cursor-pointer"
                   >
                     <IconEdit size={16} /> Update Status
                   </button>

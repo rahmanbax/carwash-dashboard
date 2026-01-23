@@ -45,6 +45,25 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Periodic Heartbeat
+  useEffect(() => {
+    // Initial heartbeat
+    const sendHeartbeat = async () => {
+      try {
+        await authService.heartbeat();
+      } catch (error) {
+        console.error("Heartbeat failed:", error);
+      }
+    };
+
+    sendHeartbeat();
+
+    // Set interval for every 3 minutes
+    const intervalId = setInterval(sendHeartbeat, 180000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   const handleLogout = async () => {
     await logout();
   };
@@ -69,15 +88,18 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               className="flex items-center gap-2 rounded-lg cursor-pointer"
             >
               {/* Profile Photo */}
-              <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+              <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0">
                 <Image
-                  src="/profile-placeholder.png"
+                  src={user?.photoUrl || '/profile-placeholder.png'}
                   alt="Profile"
                   width={40}
                   height={40}
                   className="object-cover w-full h-full"
+                  unoptimized={true}
                   onError={(e) => {
-                    e.currentTarget.style.display = "none";
+                    // Fallback to placeholder if backend image fails
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/profile-placeholder.png';
                   }}
                 />
               </div>
@@ -87,7 +109,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 <p className="text-sm font-semibold text-gray-900">
                   {user ? user.name : 'Admin User'}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 capitalize">
                   {user ? user.role : 'Admin'}
                 </p>
               </div>
